@@ -11,7 +11,7 @@ def getdata(request):
         town = request.POST.get('town', None)
         if not isinstance(town, type(None)):
             result = get_town_info(town)
-            data = {'value': result}
+            data = {'value': [(e[0],e[1]) for e in result.values]}
         return HttpResponse(json.dumps(data), content_type="application/json")
     else:
         raise Http404
