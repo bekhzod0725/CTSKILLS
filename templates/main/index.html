@@ -14,12 +14,15 @@
 
     </head>
 <body>
-<h1>Hello, {{ data.name }}</h1>
 
-<h3>Multiply by two</h3>
-<form id="theform">
-    <input type="text" value="10" id="val" />
-    <input type="button" id="submit" value="Click me!" />
+<form id="">
+    <label> Choose A type of map to show </label></br>
+    <select id = "maptype">
+        <option value = "A"> A</option>
+    </select>
+    <br>
+
+    <input type="button" id="submit" value="Show!" />
     {% csrf_token %}
 </form>
 
@@ -96,13 +99,32 @@ $.ajaxSetup({
         displayBounds();
     });
     function onCountryMouseOut(e) {   
-        console.log("country out");
     }
     function onCountryHighLight(e) {   
-        console.log("country higd");
     }
     function onCountryClick(e) {   
-        console.log("country clicked");
+            $.ajax({
+                url : "{% url 'main:getdata' %}", // the endpoint
+                type : "POST", // http method
+                data : { town : e.target.feature.properties.town }, // data sent with the post request
+                // handle a successful response
+                done : function(resp) {
+                    $("#response").html(resp.value);
+                    var info = L.control();
+                    info.onAdd = function(map) {
+                    this._div = L.DomUtil.create('div', 'info');
+                    this.update();
+                    return this._div;
+                    }
+                    info.update = function (props) {
+                        this._div.innerHTML = '<h4>US Population Density</h4>' +  (props ?
+                        '<b>' + props.name + '</b><br />' + props.density + ' people / mi<sup>2</sup>'
+                         : 'Hover over a state');
+                    };
+                    info.addTo(map);
+
+                }
+            });
     }
     function style(feature) {
         return {
@@ -111,8 +133,6 @@ $.ajaxSetup({
             opacity: 0.4,
             color: 'black',
             fillOpacity: 0.3,
-
-
         };
     }  
     function displayBounds() {
