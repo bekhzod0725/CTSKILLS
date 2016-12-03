@@ -28,7 +28,7 @@ def get_percapita(request):
                 '2012':town_info['TPC_2012'].values[0],
                 '2013':town_info['TPC_2013'].values[0],
                 '2014':town_info['TPC_2014'].values[0],}
-        data = {'value':data}
+        data = {'value':info}
         return HttpResponse(json.dumps(data),content_type="application/json")
     else:
         raise Http404

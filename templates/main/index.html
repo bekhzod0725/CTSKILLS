@@ -45,12 +45,13 @@
 </div>
 
 <div id="mapid" style="width: 1200px; height: 600px;"></div>
+<div id = "div1"></div>
 <script type="text/javascript">
     var southWest = L.latLng(42.202383, -73.869700),
         northEast = L.latLng(40.905526, -71.518626),
        mybounds = L.latLngBounds(southWest, northEast);
     var mymap = L.map('mapid').setView( [41.303, -72.843], 
-            8);
+            10);
     mymap.setMaxBounds(mybounds);
 
     L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw', {
@@ -90,88 +91,105 @@ $.ajaxSetup({
 });
 
 
-    $(document).ready( function() {
-            $("#theform").on('click', function() {
-                $.ajax({
-                    url : "{% url 'main:getdata' %}", // the endpoint
-                    type : "POST", // http method
-                    data : { value : $('#val').val() }, // data sent with the post request
+$(document).ready( function() {
+    $("#theform").on('click', function() {
+        $.ajax({
+            url : "{% url 'main:getdata' %}", // the endpoint
+            type : "POST", // http method
+            data : { value : $('#val').val() }, // data sent with the post request
 
-                    // handle a successful response
-                    success : function(resp) {
-                        $("#response").html(resp.value);
-                    },
+            // handle a successful response
+            success : function(resp) {
+                cosole.log(resp.value);
+                $("#response").html(resp.value);
+            },
 
-                    // handle a non-successful response
-                    error : function(xhr,errmsg,err) {
-                        $("#response").html("Response failed with error: " + errmsg );
-                        // provide a bit more info about the error to the console
-                        console.log(xhr.status + ": " + xhr.responseText); 
-                    }
-                });
-
-            });
-        displayBounds();
+            // handle a non-successful response
+            error : function(xhr,errmsg,err) {
+                $("#response").html("Response failed with error: " + errmsg );
+                // provide a bit more info about the error to the console
+                console.log(xhr.status + ": " + xhr.responseText); 
+            }
+        });
     });
-    function onCountryMouseOut(e) {   
-    }
+    displayBounds();
+});
+
+function onCountryMouseOut(e) {   
+}
 function onCountryHighLight(e) {   
        
-    }
+}
 
 var info = L.control({position: 'bottomright'});
-                    info.onAdd = function(map) {
-                    this._div = L.DomUtil.create('div', 'info');
-                    this.update();
-                    return this._div;
-                    }
-                    info.update = function (town, arr) {
-                        this._div.innerHTML = '<h4>CT annual average wages';
-                        if (arr) {
-                            this._div.innerHTML += " for " + town + "</h4><br>";
-                            for (var i = 0; i < arr.length; i++) {
-                                var p = arr[i];
-                                this._div.innerHTML += '<b>' + p[0] + " : " + p[1] +  '</b><br />';
-                            }
-                        } else {
-                            this._div.innerHTML += "</h4>";
-                        }
-                    };
-                    info.addTo(mymap);
-    function onCountryClick(e) {   
-            $.ajax({
-                url : "{% url 'main:getdata' %}", // the endpoint
-                type : "POST", // http method
-                data : { town : e.target.feature.properties.town }, // data sent with the post request
-                // handle a successful response
-                success : function(resp) {
-                info.update(e.target.feature.properties.town, resp.value);
-                }
-            });
+info.onAdd = function(map) {
+    this._div = L.DomUtil.create('div', 'info');
+    this.update();
+    return this._div;
+}
+info.update = function (town, arr) {
+    var html = '<h4>CT annual average wages';
+    if (arr) {
+        html += " for <I>" + town + "</I></h4><br>";
+        for (var i = 0; i < arr.length; i++) {
+            var p = arr[i];
+            html += '<b>' + p[0] + " : " + p[1] +  '</b><br />';
+        }
+    } else {
+        html += "</h4>";
     }
-    function style(feature) {
-        return {
-            fillColor: "#E3E3E3",
-            weight: 1,
-            opacity: 0.4,
-            color: 'black',
-            fillOpacity: 0.3,
-        };
-    }  
-    function displayBounds() {
-        var json = {{ data.towns|safe }};
-        geojson = L.geoJson(json, {
-            onEachFeature: onEachFeature,
-            style : style
-        }).addTo(mymap);
-    }
-    function onEachFeature(feature, layer){
-        layer.on({
-            click : onCountryClick,
-            mouseover : onCountryHighLight,
-            mouseout : onCountryMouseOut
-        });
-    } 
+    this._div.innerHTML = html;
+};
+info.addTo(mymap);
+
+function onCountryClick(e) {   
+    $.ajax({
+        url : "{% url 'main:getpercapita' %}", // the endpoint
+        type : "POST", // http method
+        data : { town : e.target.feature.properties.town }, // data sent with the post request
+        success : function(resp) {
+            console.log(resp.value);
+            var html = "";
+            for (var key in resp.value) {
+                html += key + " : " + resp.value[key] + "<br>";
+            }
+
+            $("#div1").html(html);
+        }
+    });
+    $.ajax({
+        url : "{% url 'main:getdata' %}", // the endpoint
+        type : "POST", // http method
+        data : { town : e.target.feature.properties.town }, // data sent with the post request
+        // handle a successful response
+        success : function(resp) {
+            info.update(e.target.feature.properties.town, resp.value);
+        }
+    });
+}
+function style(feature) {
+    return {
+        fillColor: "#E3E3E3",
+        weight: 1,
+        opacity: 0.4,
+        color: 'black',
+        fillOpacity: 0.3,
+    };
+}  
+function displayBounds() {
+    var json = {{ data.towns|safe }};
+    geojson = L.geoJson(json, {
+        onEachFeature: onEachFeature,
+        style : style
+    }).addTo(mymap);
+}
+function onEachFeature(feature, layer){
+    layer.on({
+        click : onCountryClick,
+        mouseover : onCountryHighLight,
+        mouseout : onCountryMouseOut
+    });
+} 
 
 </script>
 
