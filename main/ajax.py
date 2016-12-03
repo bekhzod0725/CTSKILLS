@@ -9,8 +9,14 @@ def get_town_info(town_name):
 def getdata(request):
     if request.is_ajax() and request.POST:
         town = request.POST.get('town', None)
+<<<<<<< HEAD
         result = get_town_info(town)
         data = {'value': [ (e[0],e[1]) for e in result.values]}
+=======
+        if not isinstance(town, type(None)):
+            result = get_town_info(town)
+            data = {'value': [(e[0],e[1]) for e in result.values]}
+>>>>>>> 12730d780a898bf023ffe010e7e4ee9e8de9ebc4
         return HttpResponse(json.dumps(data), content_type="application/json")
     else:
         raise Http404

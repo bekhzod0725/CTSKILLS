@@ -13,6 +13,21 @@
 
 
     </head>
+    <style>
+.info {
+    padding: 6px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+.info h4 {
+    margin: 0 0 5px;
+    color: #777;
+}
+
+</style>
 <body>
 
 <form id="">
@@ -29,7 +44,7 @@
 <div id="response">
 </div>
 
-<div id="mapid" style="width: 600px; height: 400px;"></div>
+<div id="mapid" style="width: 1200px; height: 600px;"></div>
 <script type="text/javascript">
     var southWest = L.latLng(42.202383, -73.869700),
         northEast = L.latLng(40.905526, -71.518626),
@@ -100,29 +115,37 @@ $.ajaxSetup({
     });
     function onCountryMouseOut(e) {   
     }
-    function onCountryHighLight(e) {   
+function onCountryHighLight(e) {   
+       
     }
+
+var info = L.control({position: 'bottomright'});
+                    info.onAdd = function(map) {
+                    this._div = L.DomUtil.create('div', 'info');
+                    this.update();
+                    return this._div;
+                    }
+                    info.update = function (town, arr) {
+                        this._div.innerHTML = '<h4>CT annual average wages';
+                        if (arr) {
+                            this._div.innerHTML += " for " + town + "</h4><br>";
+                            for (var i = 0; i < arr.length; i++) {
+                                var p = arr[i];
+                                this._div.innerHTML += '<b>' + p[0] + " : " + p[1] +  '</b><br />';
+                            }
+                        } else {
+                            this._div.innerHTML += "</h4>";
+                        }
+                    };
+                    info.addTo(mymap);
     function onCountryClick(e) {   
             $.ajax({
                 url : "{% url 'main:getdata' %}", // the endpoint
                 type : "POST", // http method
                 data : { town : e.target.feature.properties.town }, // data sent with the post request
                 // handle a successful response
-                done : function(resp) {
-                    $("#response").html(resp.value);
-                    var info = L.control();
-                    info.onAdd = function(map) {
-                    this._div = L.DomUtil.create('div', 'info');
-                    this.update();
-                    return this._div;
-                    }
-                    info.update = function (props) {
-                        this._div.innerHTML = '<h4>US Population Density</h4>' +  (props ?
-                        '<b>' + props.name + '</b><br />' + props.density + ' people / mi<sup>2</sup>'
-                         : 'Hover over a state');
-                    };
-                    info.addTo(map);
-
+                success : function(resp) {
+                info.update(e.target.feature.properties.town, resp.value);
                 }
             });
     }
